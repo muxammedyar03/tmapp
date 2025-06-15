@@ -2,12 +2,12 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: time_management_db
+    container_name: tmapp_6415
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: time_management
+      POSTGRES_USER: tmapp_6415_user
+      POSTGRES_PASSWORD: Ki7EKXE2q7BX5s2aLGxxbx3WIUuBSfPZ
+      POSTGRES_DB: tmapp_6415
     ports:
       - "5432:5432"
     volumes:

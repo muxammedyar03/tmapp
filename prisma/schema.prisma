@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:password123@localhost:5432/time_management_db"
+  url      = "postgresql://tmapp_6415_user:Ki7EKXE2q7BX5s2aLGxxbx3WIUuBSfPZ@dpg-d17fhcodl3ps73adqi3g-a/tmapp_6415"
 }
 
 model User {
