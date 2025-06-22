@@ -35,20 +35,28 @@ export function TimerComponent() {
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
-        setTime((prev) => prev + 1)
-      }, 1000)
+        const savedStart = localStorage.getItem("timerStart");
+        if (savedStart) {
+          const start = new Date(savedStart).getTime();
+          const now = Date.now();
+          const diff = Math.floor((now - start) / 1000);
+          setTime(diff);
+        }
+      }, 1000);
     } else {
       if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     }
-
+  
     return () => {
       if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
-    }
-  }, [isRunning])
+    };
+  }, [isRunning]);  
 
   const fetchCategories = async () => {
     try {
@@ -85,26 +93,18 @@ export function TimerComponent() {
       const entry = unfinishedEntries[0];
       const startTime = new Date(entry.startTime).getTime();
       const now = Date.now();
-      const duration = Math.floor((now - startTime) / 1000); 
+      const duration = Math.floor((now - startTime) / 1000);
+  
       setTime(duration);
       setCurrentEntryId(entry.id);
       setTitle(entry.title);
       setSelectedCategory(entry.categoryId || "");
       setIsRunning(true);
+  
+      startTimeRef.current = new Date(entry.startTime);
+      localStorage.setItem("timerStart", entry.startTime); // ✅ Saqlab qo'yiladi
     }
   }, [timeEntries]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (isRunning) {
-      interval = setInterval(() => {
-        setTime((prevTime) => prevTime + 1);
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isRunning]);
 
   const handleStart = async () => {
     if (!title.trim()) {
@@ -112,13 +112,21 @@ export function TimerComponent() {
         title: "Ошибка",
         description: "Необходимо ввести имя таймера.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
+  
+    startTimeRef.current = new Date();
+    const isoStart = startTimeRef.current.toISOString();
+    localStorage.setItem("timerStart", isoStart); // ✅ Yozib qo'yamiz
+    
+    setIsRunning(true);
 
-    startTimeRef.current = new Date()
-    setIsRunning(true)
-
+    if (currentEntryId) {
+      console.log("Timer already running. Not creating a new entry.");
+      return;
+    }
+    
     try {
       const response = await fetch("/api/time-entries", {
         method: "POST",
@@ -126,77 +134,86 @@ export function TimerComponent() {
         body: JSON.stringify({
           title: title.trim(),
           categoryId: selectedCategory || null,
-          startTime: startTimeRef.current.toISOString(),
+          startTime: isoStart,
         }),
-      })
-
+      });
+  
       if (response.ok) {
-        const data = await response.json()
-        setCurrentEntryId(data.id)
+        const data = await response.json();
+        setCurrentEntryId(data.id);
+        localStorage.setItem("entryId", data.id)
       } else {
-        throw new Error("Не удалось создать запись времени")
+        throw new Error("Не удалось создать запись времени");
       }
     } catch (error) {
-      console.error("Error creating time entry:", error)
+      console.error("Error creating time entry:", error);
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при создании таймера.",
         variant: "destructive",
-      })
-      setIsRunning(false)
+      });
+      setIsRunning(false);
     }
-  }
+  };  
 
   const handlePause = () => {
     setIsRunning(false)
   }
 
   const handleStop = async () => {
-    if (!currentEntryId) return
-
-    const endTime = new Date()
-    const duration = time
-
-    setIsRunning(false)
-    setTime(0)
-
+    if (!currentEntryId) return;
+  
+    const endTime = new Date();
+    const savedStart = localStorage.getItem("timerStart");
+    const duration = savedStart
+      ? Math.floor((Date.now() - new Date(savedStart).getTime()) / 1000)
+      : time;
+  
+    setIsRunning(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setTime(0);
+    localStorage.removeItem("timerStart");
+  
     try {
       const response = await fetch(`/api/time-entries/${currentEntryId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           endTime: endTime.toISOString(),
-          duration: duration,
+          duration,
         }),
-      })
-
+      });
+  
       if (response.ok) {
         toast({
           title: "Успех",
           description: `Таймер остановлен: ${formatTime(duration)}`,
-        })
-        setTitle("")
-        setSelectedCategory("")
-        setCurrentEntryId(null)
-        fetchTimeEntries()
+        });
+        setTitle("");
+        setSelectedCategory("");
+        setCurrentEntryId(null);
+        fetchTimeEntries();
       } else {
-        throw new Error("Failed to update time entry")
+        throw new Error("Failed to update time entry");
       }
     } catch (error) {
-      console.error("Error updating time entry:", error)
+      console.error("Error updating time entry:", error);
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при остановке таймера.",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   return (
-    <div className="space-y-4">
-      <Card className="rounded-none border-0">
-        <CardContent className="pt-6 bg-border dark:bg-gray-900 p-4 rounded-lg">
-          <div className="grid grid-cols-2 md:grid-cols-4 tems-center justify-center w-full text-2xl">
+    <div className="md:space-y-4">
+      <Card className="rounded-none border-0 hidden md:block">
+        <CardContent className="pt-6 bg-border dark:bg-gray-950 border p-4 rounded-lg">
+          <div className="grid grid-cols-2 md:grid-cols-4 items-center justify-center w-full text-2xl">
             <div className="flex items-center justify-center">
               <a href="https://music.yandex.uz/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Yandex_Music_icon_2023.svg/2048px-Yandex_Music_icon_2023.svg.png" className="w-8 h-8" alt="yandex music" loading="lazy"/>
@@ -224,14 +241,14 @@ export function TimerComponent() {
           </div>
         </CardContent>
       </Card>
-      <div className="gap-x-4 grid grid-cols-1 lg:grid-cols-2">
+      <div className="md:gap-x-4 grid grid-cols-1 lg:grid-cols-2">
         {/* Main Timer */}
-        <Card className="border-0 rounded-none">
-          <CardHeader>
+        <Card className="border-0 rounded-none p-0">
+          <CardHeader className="p-0 pb-4 md:py-6 px-0">
             <CardTitle>Таймер</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-between items-center w-full bg-border dark:bg-gray-900 p-3 px-5 rounded-lg">
-            <div className="text-4xl text-center">{formatTime(time)}</div>
+            <div className="text-3xl md:text-4xl text-center">{formatTime(time)}</div>
             <div className="flex justify-center">
               {!isRunning ? (
                 <button onClick={handleStart} className="w-12 h-12 bg-green-600/20 hover:bg-green-600/30 flex items-center justify-center rounded-full">
@@ -257,16 +274,17 @@ export function TimerComponent() {
                   id="timer-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className="text-sm md:text-base"
                   placeholder="Над чем вы работаете?"
                   disabled={isRunning}
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 w-36">
                 <Label htmlFor="category">Категория</Label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory} disabled={isRunning}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите категорию" />
+                    <SelectValue className="text-xs" placeholder="Категория" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -284,11 +302,11 @@ export function TimerComponent() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 rounded-none border-l">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-0 rounded-none md:border-l p-0">
+          <CardHeader className="flex flex-row items-center justify-between px-0 md:px-4">
             <CardTitle>Последние таймеры</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 md:px-4">
             <div className="space-y-2">
               {timeEntries.map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -302,7 +320,7 @@ export function TimerComponent() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono">{entry.duration ? formatTime(entry.duration) : "Davom etmoqda..."}</div>
+                    <div className="font-mono">{entry.duration ? formatTime(entry.duration) : "Продолжается..."}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(entry.startTime).toLocaleDateString("uz-UZ")}
                     </div>

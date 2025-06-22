@@ -148,13 +148,13 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen mb-16 md:mb-0 bg-background">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Еженедельная статистика</h1>
-            <p className="text-muted-foreground">Ваша активность на этой неделе</p>
+            <h1 className="text-xl md:text-3xl font-bold">Еженедельная статистика</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Ваша активность на этой неделе</p>
           </div>
 
           {/* Overview Cards */}
@@ -213,7 +213,7 @@ export default function StatisticsPage() {
           {/* Category Breakdown */}
           <Card>
             <CardHeader>
-              <CardTitle>Распределение по категориям</CardTitle>
+              <CardTitle className="text-xl md:text-2xl">Распределение по категориям</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

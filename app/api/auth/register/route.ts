@@ -34,11 +34,12 @@ export async function POST(request: NextRequest) {
 
     // Create default categories
     const defaultCategories = [
-      { name: "Ish", color: "#EF4444", icon: "💼" },
-      { name: "O'qish", color: "#10B981", icon: "📚" },
-      { name: "Sport", color: "#F59E0B", icon: "🏃" },
-      { name: "Dam olish", color: "#8B5CF6", icon: "🎮" },
-      { name: "Boshqa", color: "#6B7280", icon: "📝" },
+      {name: 'Работа', color: '#EF4444', icon: '💼'},
+      {name: 'Учеба', color: '#10B981', icon: '📚'},
+      {name: 'Спорт', color: '#F59E0B', icon: '🏃'},
+      {name: 'Отдых', color: '#8B5CF6', icon: '🎮'},
+      {name: 'Обед', color: '#6B7280', icon: '🍽️'},
+      {name: 'Другое', color: '#3B82F6', icon: '❓'}
     ]
 
     await prisma.category.createMany({

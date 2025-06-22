@@ -6,7 +6,6 @@ SELECT
   COALESCE(raw_user_meta_data->>'full_name', email) as full_name
 FROM auth.users
 WHERE id NOT IN (SELECT id FROM profiles)
-ON CONFLICT (id) DO NOTHING;
 
 -- Mavjud foydalanuvchilar uchun default kategoriyalar yaratish
 INSERT INTO categories (user_id, name, color, icon)
@@ -18,11 +17,12 @@ SELECT
 FROM auth.users u
 CROSS JOIN (
   VALUES 
-    ('Ish', '#EF4444', '💼'),
-    ('O''qish', '#10B981', '📚'),
-    ('Sport', '#F59E0B', '🏃'),
-    ('Dam olish', '#8B5CF6', '🎮'),
-    ('Boshqa', '#6B7280', '📝')
+    ('Работа', '#EF4444', '💼'),
+    ('Учеба', '#10B981', '📚'),
+    ('Спорт', '#F59E0B', '🏃'),
+    ('Отдых', '#8B5CF6', '🎮'),
+    ('Обед', '#6B7280', '🍽️'),
+    ('Другое', '#3B82F6', '❓')
 ) AS category_data(name, color, icon)
 WHERE NOT EXISTS (
   SELECT 1 FROM categories c 

@@ -7,9 +7,9 @@ import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTheme } from "next-themes"
-import { Loader2, Moon, Sun, Monitor } from "lucide-react"
+import { Loader2, Moon, Sun, Monitor, MessageCircle } from "lucide-react"
+import Link from "next/link"
 
 export default function SettingsPage() {
   const { user, loading } = useAuth()
@@ -35,99 +35,105 @@ export default function SettingsPage() {
   }
 
   const themeOptions = [
-    { value: "light", label: "Yorug'", icon: Sun },
-    { value: "dark", label: "Qorong'u", icon: Moon },
-    { value: "system", label: "Tizim", icon: Monitor },
+    { value: "light", label: "Светлая", icon: Sun },
+    { value: "dark", label: "Тёмная", icon: Moon },
+    { value: "system", label: "Системная", icon: Monitor },
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mb-16 md:m-0">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">Sozlamalar</h1>
-            <p className="text-muted-foreground">Ilova sozlamalarini boshqaring</p>
+            <h1 className="text-3xl font-bold">Настройки</h1>
+            <p className="text-muted-foreground">Управляйте настройками приложения</p>
           </div>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Ko'rinish</CardTitle>
+            <CardHeader className="px-3 sm:px-6">
+              <CardTitle>Внешний вид</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="theme">Mavzu</Label>
-                <Select value={theme} onValueChange={setTheme}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Mavzu tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {themeOptions.map((option) => {
-                      const Icon = option.icon
-                      return (
-                        <SelectItem key={option.value} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            <span>{option.label}</span>
-                          </div>
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
+            <CardContent className="space-y-4 p-3 sm:p-6">
+              <Label htmlFor="theme">Тема</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {themeOptions.map((option) => {
+                const Icon = option.icon
+                return (
+                  <Button
+                    key={option.value}
+                    variant={theme === option.value ? "ghost" : "outline"}
+                    onClick={() => setTheme(option.value)}
+                    className={"flex items-center gap-2 border"}
+                    >
+                    <Icon className="h-4 w-4" />
+                    <span className="text-xs">{option.label}</span>
+                  </Button>
+                )
+                })}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Bildirishnomalar</CardTitle>
+              <CardTitle>Уведомления</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Timer tugaganda bildirishnoma</Label>
-                  <p className="text-sm text-muted-foreground">Timer tugaganida bildirishnoma olish</p>
+                  <Label>Уведомление по завершении таймера</Label>
+                  <p className="text-sm text-muted-foreground">Получать уведомление, когда таймер завершён</p>
                 </div>
                 <Button variant="outline" disabled>
-                  Tez orada
+                  Скоро будет
                 </Button>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Kunlik hisobot</Label>
-                  <p className="text-sm text-muted-foreground">Har kuni faoliyat hisobotini olish</p>
+                  <Label>Ежедневный отчёт</Label>
+                  <p className="text-sm text-muted-foreground">Получать ежедневный отчёт о деятельности</p>
                 </div>
                 <Button variant="outline" disabled>
-                  Tez orada
+                  Скоро будет
                 </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="py-2 text-primary">Отправляйте дополнительные советы или сообщения об ошибках</p>
+                <Link
+                  href={'/Faq'}
+                  className="flex items-center justify-center h-10 w-32 border px-2 rounded-md text-base text-primary text gap-1 font-medium transition-colors"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  FAQ
+                </Link>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Ma'lumotlar</CardTitle>
+              <CardTitle>Данные</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Ma'lumotlarni eksport qilish</Label>
-                  <p className="text-sm text-muted-foreground">Barcha vaqt yozuvlarini CSV formatida yuklab olish</p>
+                  <Label>Экспорт данных</Label>
+                  <p className="text-sm text-muted-foreground">Скачать все записи времени в формате CSV</p>
                 </div>
                 <Button variant="outline" disabled>
-                  Tez orada
+                  Скоро будет
                 </Button>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Ma'lumotlarni o'chirish</Label>
-                  <p className="text-sm text-muted-foreground">Barcha ma'lumotlarni butunlay o'chirish</p>
+                  <Label>Удалить данные</Label>
+                  <p className="text-sm text-muted-foreground">Полностью удалить все данные</p>
                 </div>
                 <Button variant="destructive" disabled>
-                  Tez orada
+                  Скоро будет
                 </Button>
               </div>
             </CardContent>

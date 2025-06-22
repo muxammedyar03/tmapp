@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Save } from "lucide-react"
 
@@ -19,8 +18,8 @@ interface Profile {
   email: string | null
   fullName: string | null
   avatarUrl: string | null
-  created_at: string | null
-  updated_at: string | null
+  createdAt: string | null
+  updatedAt: string | null
 }
 
 export default function ProfilePage() {
@@ -59,6 +58,8 @@ export default function ProfilePage() {
     if (response.ok) {
       const data = await response.json()
       setProfile(data)
+      setFullName(data.fullName)
+      setEmail(data.email)
     } else {
       console.error("Ошибка токена или пользователь не найден")
     }
@@ -91,7 +92,7 @@ export default function ProfilePage() {
       if (!response.ok) {
         const errorData = await response.json()
         toast({
-          title: "Xatolik",
+          title: "ошибка",
           description: errorData.error || "Произошла ошибка при обновлении вашего профиля.",
           variant: "destructive",
         })
@@ -140,28 +141,28 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Персональная информация</CardTitle>
+              <CardTitle className="text-base md:text-xl">Персональная информация</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">To'liq ism</Label>
+                  <Label htmlFor="fullName">Полное имя</Label>
                   <Input
                     id="fullName"
-                    value={fullName == " " ? profile?.fullName ?? "" : fullName}
+                    value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="To'liq ismingizni kiriting"
+                    placeholder="Введите свое полное имя."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Электронная почта</Label>
                   <Input
                     id="email"
                     type="email"
-                    value={email === " " ? profile?.email ?? "" : email}
+                    value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email manzilingizni kiriting"
+                    placeholder="Введите свой адрес электронной почты"
                   />
                 </div>
 
@@ -171,27 +172,6 @@ export default function ProfilePage() {
                   Сохранять
                 </Button>
               </form>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Информация об аккаунте</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label>ID пользователя</Label>
-                  <div className="text-sm text-muted-foreground font-mono">{profile?.id}</div>
-                </div>
-
-                <div>
-                  <Label>Дата регистрации</Label>
-                  <div className="text-sm text-muted-foreground">
-                    {profile?.created_at ? new Date(profile.created_at).toLocaleDateString("uz-UZ") : "Нет информации"}
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
