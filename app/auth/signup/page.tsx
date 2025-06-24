@@ -30,21 +30,21 @@ export default function SignupPage() {
 
       if (result.success) {
         toast({
-          title: "Muvaffaqiyat",
-          description: "Hisob yaratildi! Endi kirish mumkin.",
+          title: "Успешно",
+          description: "Аккаунт успешно создан! Теперь вы можете войти.",
         })
         router.push("/auth/login")
       } else {
         toast({
-          title: "Xatolik",
-          description: result.error || "Ro'yxatdan o'tish jarayonida xatolik yuz berdi",
+          title: "Ошибка",
+          description: result.error || "Произошла ошибка при регистрации.",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Xatolik",
-        description: "Ro'yxatdan o'tish jarayonida xatolik yuz berdi",
+        title: "Ошибка",
+        description: "Произошла ошибка при регистрации.",
         variant: "destructive",
       })
     } finally {
@@ -56,13 +56,13 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Ro'yxatdan o'tish</CardTitle>
-          <CardDescription>Yangi hisob yaratish uchun ma'lumotlaringizni kiriting</CardDescription>
+          <CardTitle>Регистрация</CardTitle>
+          <CardDescription>Введите свои данные для создания аккаунта</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">To'liq ism</Label>
+              <Label htmlFor="fullName">Полное имя</Label>
               <Input
                 id="fullName"
                 type="text"
@@ -72,11 +72,11 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Электронная почта</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">Пароль</Label>
               <Input
                 id="password"
                 type="password"
@@ -88,14 +88,14 @@ export default function SignupPage() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Ro'yxatdan o'tish
+              Зарегистрироваться
             </Button>
           </form>
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Hisobingiz bormi?{" "}
+              Уже есть аккаунт?{" "}
               <Link href="/auth/login" className="text-primary hover:underline">
-                Kirish
+                Войти
               </Link>
             </p>
           </div>

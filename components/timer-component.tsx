@@ -75,7 +75,9 @@ export function TimerComponent() {
       const response = await fetch("/api/time-entries")
       if (response.ok) {
         const data = await response.json()
-        setTimeEntries(data)
+        const dayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+        const todaysEntries = data.filter((entry: TimeEntry) => new Date(entry.createdAt) >= dayAgo);
+        setTimeEntries(todaysEntries)
       }
     } catch (error) {
       console.error("Error fetching time entries:", error)
@@ -211,7 +213,7 @@ export function TimerComponent() {
 
   return (
     <div className="md:space-y-4">
-      <Card className="rounded-none border-0 hidden md:block">
+      <Card className="rounded-none shadow-none border-0 hidden md:block">
         <CardContent className="pt-6 bg-border dark:bg-gray-950 border p-4 rounded-lg">
           <div className="grid grid-cols-2 md:grid-cols-4 items-center justify-center w-full text-2xl">
             <div className="flex items-center justify-center">
@@ -243,7 +245,7 @@ export function TimerComponent() {
       </Card>
       <div className="md:gap-x-4 grid grid-cols-1 lg:grid-cols-2">
         {/* Main Timer */}
-        <Card className="border-0 rounded-none p-0">
+        <Card className="border-0 rounded-none p-0 shadow-none">
           <CardHeader className="p-0 pb-4 md:py-6 px-0">
             <CardTitle>Таймер</CardTitle>
           </CardHeader>
@@ -302,7 +304,7 @@ export function TimerComponent() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 rounded-none md:border-l p-0">
+        <Card className="border-0 rounded-none shadow-none md:h-screen md:border-l p-0">
           <CardHeader className="flex flex-row items-center justify-between px-0 md:px-4">
             <CardTitle>Последние таймеры</CardTitle>
           </CardHeader>

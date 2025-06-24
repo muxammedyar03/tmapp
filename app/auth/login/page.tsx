@@ -31,15 +31,15 @@ export default function LoginPage() {
         router.push("/")
       } else {
         toast({
-          title: "Xatolik",
-          description: result.error || "Kirish jarayonida xatolik yuz berdi",
+          title: "Ошибка",
+          description: result.error || "Произошла ошибка при входе в систему.",
           variant: "destructive",
         })
       }
     } catch (error) {
       toast({
-        title: "Xatolik",
-        description: "Kirish jarayonida xatolik yuz berdi",
+        title: "Ошибка",
+        description: "Произошла ошибка при входе в систему.",
         variant: "destructive",
       })
     } finally {
@@ -51,17 +51,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Kirish</CardTitle>
-          <CardDescription>Hisobingizga kirish uchun email va parolingizni kiriting</CardDescription>
+          <CardTitle>Вход</CardTitle>
+          <CardDescription>Введите вашу электронную почту и пароль для входа</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Электронная почта</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Parol</Label>
+              <Label htmlFor="password">Пароль</Label>
               <Input
                 id="password"
                 type="password"
@@ -72,17 +72,17 @@ export default function LoginPage() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Kirish
+              Войти
             </Button>
           </form>
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Hisobingiz yo'qmi?{" "}
+              Нет аккаунта?{" "}
               <Link href="/auth/signup" className="text-primary hover:underline">
-                Ro'yxatdan o'tish
+                Зарегистрироваться
               </Link>
             </p>
-            <p className="text-xs text-muted-foreground mt-2">Demo: demo@example.com / password123</p>
+            <p className="text-xs text-muted-foreground mt-2">Демо: demo@example.com / password123</p>
           </div>
         </CardContent>
       </Card>

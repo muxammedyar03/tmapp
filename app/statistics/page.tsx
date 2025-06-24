@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { supabase } from "@/lib/supabase"
 import { Loader2, Clock, TrendingUp, TrendingDown } from "lucide-react"
 import { TimeEntry } from "@/lib/types"
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts"
 
 interface CategoryStats {
   category_name: string
@@ -26,6 +27,8 @@ interface WeeklyStats {
   most_used_category: CategoryStats | null
   least_used_category: CategoryStats | null
   work_study_time: number
+  unproductive_time: number
+  daily_effectiveness: { day: string, duration: number }[]
 }
 
 export default function StatisticsPage() {
@@ -45,55 +48,67 @@ export default function StatisticsPage() {
   const fetchWeeklyStats = async () => {
     setStatsLoading(true)
 
-    // Get start of current week (Monday)
     const now = new Date()
     const startOfWeek = new Date(now)
     startOfWeek.setDate(now.getDate() - now.getDay() + 1)
     startOfWeek.setHours(0, 0, 0, 0)
 
     try {
-      let data:TimeEntry[] = []
+      let data: TimeEntry[] = []
       const response = await fetch("/api/time-entries")
       if (response.ok) {
         data = await response.json()
       }
 
-      // Process data
       const categoryMap = new Map<string, CategoryStats>()
       let totalTime = 0
       let workStudyTime = 0
+      let unproductiveTime = 0
+      const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+      const effectivenessMap = new Map<number, number>()
 
       data?.forEach((entry: any) => {
-        const duration = entry.duration || 0
-        totalTime += duration
+        const created = new Date(entry.createdAt)
+        if (created >= startOfWeek && created <= now) {
+          const duration = entry.duration || 0
+          totalTime += duration
 
-        const categoryName = entry.category?.name || "Kategoriyasiz"
-        const categoryIcon = entry.category?.icon || "📝"
-        const categoryColor = entry.category?.color || "#6B7280"
+          const categoryName = entry.category?.name || "Без категории"
+          const categoryIcon = entry.category?.icon || "📝"
+          const categoryColor = entry.category?.color || "#6B7280"
 
-        if (categoryName === "Ish" || categoryName === "O'qish") {
-          workStudyTime += duration
-        }
+          if (["Работа", "Учеба"].includes(categoryName)) {
+            workStudyTime += duration
+          } else if (["Отдых", "Другое"].includes(categoryName)) {
+            unproductiveTime += duration
+          }
 
-        if (categoryMap.has(categoryName)) {
-          const existing = categoryMap.get(categoryName)!
-          existing.total_duration += duration
-          existing.entry_count += 1
-        } else {
-          categoryMap.set(categoryName, {
-            category_name: categoryName,
-            category_icon: categoryIcon,
-            category_color: categoryColor,
-            total_duration: duration,
-            entry_count: 1,
-          })
+          const dayIndex = created.getDay() === 0 ? 6 : created.getDay() - 1
+          effectivenessMap.set(dayIndex, (effectivenessMap.get(dayIndex) || 0) + (categoryName === "Работа" || categoryName === "Учеба" ? duration : 0))
+
+          if (categoryMap.has(categoryName)) {
+            const existing = categoryMap.get(categoryName)!
+            existing.total_duration += duration
+            existing.entry_count += 1
+          } else {
+            categoryMap.set(categoryName, {
+              category_name: categoryName,
+              category_icon: categoryIcon,
+              category_color: categoryColor,
+              total_duration: duration,
+              entry_count: 1,
+            })
+          }
         }
       })
 
       const categories = Array.from(categoryMap.values()).sort((a, b) => b.total_duration - a.total_duration)
-
       const mostUsed = categories.length > 0 ? categories[0] : null
       const leastUsed = categories.length > 1 ? categories[categories.length - 1] : null
+      const daily_effectiveness = Array.from({ length: 7 }, (_, i) => ({
+        day: days[i],
+        duration: Math.floor((effectivenessMap.get(i) || 0) / 3600),
+      }))
 
       setWeeklyStats({
         total_time: totalTime,
@@ -101,9 +116,11 @@ export default function StatisticsPage() {
         most_used_category: mostUsed,
         least_used_category: leastUsed,
         work_study_time: workStudyTime,
+        unproductive_time: unproductiveTime,
+        daily_effectiveness,
       })
     } catch (error) {
-      console.error("Error processing stats:", error)
+      console.error("Ошибка при получении статистики:", error)
     } finally {
       setStatsLoading(false)
     }
@@ -112,30 +129,10 @@ export default function StatisticsPage() {
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
-    return `${hours}ч ${minutes}д`
+    return `${hours}ч ${minutes}м`
   }
 
-  const formatHours = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    let unit: string;
-  
-    const lastDigit = hours % 10;
-    const lastTwoDigits = hours % 100;
-  
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-      unit = "часов";
-    } else if (lastDigit === 1) {
-      unit = "час";
-    } else if (lastDigit >= 2 && lastDigit <= 4) {
-      unit = "часа";
-    } else {
-      unit = "часов";
-    }
-  
-    return `${hours} ${unit}`;
-  };
-
-  if (loading || statsLoading) {
+  if (loading || statsLoading || !weeklyStats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -143,114 +140,68 @@ export default function StatisticsPage() {
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="min-h-screen mb-16 md:mb-0 bg-background">
+      <title>Еженедельная Статистика</title>
+      <meta name="description" content="Time Management Application" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="icon" href="https://7pace.gallerycdn.vsassets.io/extensions/7pace/timetracker/5.71.0.2/1747838120337/Microsoft.VisualStudio.Services.Icons.Default" />
+      
       <Navigation />
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-xl md:text-3xl font-bold">Еженедельная статистика</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Ваша активность на этой неделе</p>
-          </div>
+      <main className="container mx-auto px-4 py-8 space-y-6">
+        <h1 className="text-xl md:text-3xl font-bold">Еженедельная эффективность</h1>
 
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Oбщее время</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{weeklyStats ? formatTime(weeklyStats.total_time) : "0с 0д"}</div>
-                <p className="text-xs text-muted-foreground">
-                  {weeklyStats ? formatHours(weeklyStats.total_time) : "0 часов"}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Самый</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl">
-                  {weeklyStats?.most_used_category
-                    ? formatTime(weeklyStats.most_used_category.total_duration)
-                    : "0с 0д"}
-                </p>
-                <div className="flex items-end gap-x-2">
-                  <div className="text-xs font-bold">{weeklyStats?.most_used_category?.category_icon || "📝"}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {weeklyStats?.most_used_category?.category_name || "Нет данных"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Работа и учёба</CardTitle>
-                <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {weeklyStats ? formatTime(weeklyStats.work_study_time) : "0с 0д"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {weeklyStats
-                    ? `${((weeklyStats.work_study_time / weeklyStats.total_time) * 100 || 0).toFixed(1)}% от общего времени`
-                    : "0% от общего времени"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Category Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card><CardHeader><CardTitle>Общее время</CardTitle></CardHeader><CardContent className="text-2xl">{formatTime(weeklyStats.total_time)}</CardContent></Card>
+          <Card><CardHeader><CardTitle>Эффективность (работа и учёба)</CardTitle></CardHeader><CardContent className="text-2xl">{formatTime(weeklyStats.work_study_time)}</CardContent></Card>
+          <Card><CardHeader><CardTitle>Непродуктивное время</CardTitle></CardHeader><CardContent className="text-2xl">{formatTime(weeklyStats.unproductive_time)}</CardContent></Card>
           <Card>
-            <CardHeader>
-              <CardTitle className="text-xl md:text-2xl">Распределение по категориям</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {weeklyStats?.categories.map((category) => {
-                  const percentage =
-                    weeklyStats.total_time > 0 ? (category.total_duration / weeklyStats.total_time) * 100 : 0
+            <CardHeader><CardTitle>Самая используемая категория</CardTitle></CardHeader>
+            <CardContent className="text-xl">
+              {weeklyStats.most_used_category
+                ? `${weeklyStats.most_used_category.category_icon} ${weeklyStats.most_used_category.category_name} — ${formatTime(weeklyStats.most_used_category.total_duration)}`
+                : "Нет данных"}
+            </CardContent>
+          </Card>
+        </div>
 
-                  return (
-                    <div key={category.category_name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span>{category.category_icon}</span>
-                          <span className="font-medium">{category.category_name}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">{formatTime(category.total_duration)}</div>
-                          <div className="text-sm text-muted-foreground">{category.entry_count} занятия</div>
-                        </div>
-                      </div>
-                      <Progress
-                        value={percentage}
-                        className="h-2"
-                        style={
-                          {
-                            "--progress-background": category.category_color,
-                          } as React.CSSProperties
-                        }
-                      />
-                      <div className="text-xs text-muted-foreground text-right">{percentage.toFixed(1)}%</div>
-                    </div>
-                  )
-                })}
-
-                {(!weeklyStats?.categories || weeklyStats.categories.length === 0) && (
-                  <div className="text-center text-muted-foreground py-8">Пока нет никакой активности.</div>
-                )}
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+          {/* Pie chart */}
+          <Card>
+            <CardHeader><CardTitle>Категории (Круговая диаграмма)</CardTitle></CardHeader>
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={weeklyStats.categories.filter(c => c.total_duration > 0)}
+                    dataKey="total_duration"
+                    nameKey="category_name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
+                    {weeklyStats.categories.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.category_color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatTime(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          {/* Bar chart */}
+          <Card>
+            <CardHeader><CardTitle>Эффективность по дням</CardTitle></CardHeader>
+            <CardContent className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyStats.daily_effectiveness}>
+                  <XAxis dataKey="day" />
+                  <YAxis label={{ value: "Часы", angle: -90, position: "insideLeft" }} />
+                  <Tooltip />
+                  <Bar dataKey="duration" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>

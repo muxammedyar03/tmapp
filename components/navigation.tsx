@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-import { Timer, BarChart3, User, Settings, LogOut, Icon, MessageCircle } from "lucide-react"
+import { Timer, BarChart3, User, Settings, LogOut, Icon, MessageCircle, BarChart2, ChartPie } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Navigation() {
@@ -13,7 +13,8 @@ export function Navigation() {
 
   const navigation = [
     { name: "Таймер", href: "/", icon: Timer },
-    { name: "Статистика", href: "/statistics", icon: BarChart3 },
+    { name: "Сегодняшняя", href: "/today", icon: ChartPie },
+    { name: "Еженедельная", href: "/statistics", icon: BarChart3 },
     { name: "Профиль", href: "/profile", icon: User },
     { name: "Настройки", href: "/settings", icon: Settings },
   ]
@@ -26,11 +27,11 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16 px-4 md:px-6">
           <div className="flex items-center space-x-4">
             <Link href="/" className="text-xl font-bold">
-              TimeTracker
+              <img src="https://7pace.gallerycdn.vsassets.io/extensions/7pace/timetracker/5.71.0.2/1747838120337/Microsoft.VisualStudio.Services.Icons.Default" width={50} alt="" />
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center md:space-x-4">
+          <div className="hidden md:flex items-center md:space-x-2">
             {navigation.map((item) => {
               const Icon = item.icon
               return (

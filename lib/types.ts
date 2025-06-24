@@ -13,4 +13,6 @@ export interface TimeEntry {
     endTime: string | null
     duration: number | null
     category?: Category
+    createdAt: string
+    updatedAt: string
 }

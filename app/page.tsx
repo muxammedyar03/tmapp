@@ -30,11 +30,17 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4 py-8">
-        <TimerComponent />
-      </main>
-    </div>
+    <>
+      <title>Time Managemant App</title>
+      <meta name="description" content="Time Management Application" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="icon" href="https://7pace.gallerycdn.vsassets.io/extensions/7pace/timetracker/5.71.0.2/1747838120337/Microsoft.VisualStudio.Services.Icons.Default" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="container mx-auto px-4 py-8">
+          <TimerComponent />
+        </main>
+      </div>
+    </>
   )
 }
